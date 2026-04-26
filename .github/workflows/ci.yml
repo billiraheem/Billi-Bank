@@ -19,8 +19,8 @@ jobs:
       postgres:
         image: postgres:12
         env:
-          POSTGRES_USER: root
-          POSTGRES_PASSWORD: secret
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: billi_bank
         ports:
           - 5432:5432
@@ -43,6 +43,14 @@ jobs:
        curl -L https://github.com/golang-migrate/migrate/releases/download/v4.19.1/migrate.linux-amd64.tar.gz | tar xvz
        sudo mv migrate /usr/bin/migrate
        which migrate
+    
+    - name: Create app.env
+      run: |
+        echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> app.env
+        echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> app.env
+        echo "DB_SOURCE=${{ secrets.DB_SOURCE }}" >> app.env
+        echo "DB_DRIVER=postgres" >> app.env
+        echo "SERVER_ADDRESS=0.0.0.0:8080" >> app.env
     
     - name: Run migrations
       run: make migrateup
