@@ -1,17 +1,19 @@
+include app.env
+
 postgres:
-	docker run --name postgres12 -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres:12-alpine 
+	docker run --name postgres12 -p 5432:5432 -e POSTGRES_USER=$(POSTGRES_USER) -e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) -d postgres:12-alpine 
 
 createdb:
-	docker exec -it postgres12 createdb --username=root --owner=root billi_bank
+	docker exec -it postgres12 createdb --username=$(POSTGRES_USER) --owner=$(POSTGRES_USER) billi_bank
 
 dropdb:
 	docker exec -it postgres12 dropdb billi_bank
 
 migrateup:
-	migrate -path db/migration -database "postgres://root:secret@localhost:5432/billi_bank?sslmode=disable" -verbose up
+	migrate -path db/migration -database "$(DB_SOURCE)" -verbose up
 
 migratedown:
-	migrate -path db/migration -database "postgres://root:secret@localhost:5432/billi_bank?sslmode=disable" -verbose down
+	migrate -path db/migration -database "$(DB_SOURCE)" -verbose down
 
 sqlc:
 	sqlc generate
