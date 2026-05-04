@@ -107,12 +107,12 @@ func (server *Server) updateAccount(ctx *gin.Context) {
 		return
 	}
 
-	arg := db.AddAccountBalanceParams{
-		ID: uriReq.ID,
+	arg := db.DepositTxParams{
+		AccountID: uriReq.ID,
 		Amount: bodyReq.Amount,
 	}
 
-	account, err := server.store.AddAccountBalance(ctx, arg)
+	account, err := server.store.DepositTx(ctx, arg)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errRes(err))

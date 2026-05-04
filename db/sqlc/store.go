@@ -6,20 +6,28 @@ import (
 	"fmt"
 )
 
-type Store struct {
+// defines all functions to execute db queries and transactions
+type Store interface {
+	Querier;
+	TransferTx(ctx context.Context, args TransferTxParams) (TransferTxResult, error);
+	DepositTx(ctx context.Context, args DepositTxParams) (DepositTxResult, error);
+}
+
+// provides all functions to execute Db queries and transaction
+type SQLStore struct {
 	*Queries
 	db *sql.DB
 }
 
-func NewStore(db *sql.DB) *Store {
-	return &Store{
+func NewStore(db *sql.DB) Store {
+	return &SQLStore{
 		db:      db,
 		Queries: New(db),
 	}
 }
 
 // execTx executes a () within a DB transaction
-func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
+func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) error {
 	tx, err := store.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -54,7 +62,7 @@ type TransferTxResult struct {
 
 // TransferTx performs a money transfer from one acct to the other.
 // It creates a transfer record, add acct entries, and update accts' balance within a single DB transaction
-func (store *Store) TransferTx(ctx context.Context, args TransferTxParams) (TransferTxResult, error) {
+func (store *SQLStore) TransferTx(ctx context.Context, args TransferTxParams) (TransferTxResult, error) {
 	var result TransferTxResult
 
 	err := store.execTx(ctx, func(q *Queries) error {
@@ -117,7 +125,47 @@ func addMoney(
 	account2, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
 		ID:     accountID2,
 		Amount: amount2,
-	})	
+	})
 
 	return
+}
+
+type DepositTxParams struct {
+	AccountID int64 `json:"account_id"`
+	Amount    int64 `json:"amount"`
+}
+
+type DepositTxResult struct {
+	Account Account `json:"account"`
+	Entry   Entry   `json:"entry"`
+}
+
+// DepositTx performs a money deposit to one acct.
+// It creates an entry record, and update acct's balance within a single DB transaction
+func (store *SQLStore) DepositTx(ctx context.Context, args DepositTxParams) (DepositTxResult, error) {
+	var result DepositTxResult
+
+	err := store.execTx(ctx, func(q *Queries) error {
+		var err error
+
+		result.Account, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
+			ID: args.AccountID,
+			Amount: args.Amount,
+		})
+		if err != nil {
+			return err
+		}
+
+		result.Entry, err = q.CreateEntry(ctx, CreateEntryParams{
+			AccountID: args.AccountID,
+			Amount: args.Amount,
+		})
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return result, err
 }

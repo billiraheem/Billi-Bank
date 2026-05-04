@@ -3,6 +3,7 @@ module github.com/billiraheem/Billi-Bank
 go 1.26.1
 
 require (
+	github.com/golang/mock v1.6.0
 	github.com/lib/pq v1.12.3
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1

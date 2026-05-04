@@ -158,3 +158,17 @@ func TestTransferTxDeadlock(t *testing.T) {
 	require.Equal(t, account1.Balance, updatedAccount1.Balance)
 	require.Equal(t, account2.Balance, updatedAccount2.Balance)
 }
+
+func TestDepositTx(t *testing.T) {
+	store := NewStore(testDB)
+	account := createRandomAccount(t)
+
+	result, err := store.DepositTx(context.Background(), DepositTxParams{
+		AccountID: account.ID,
+		Amount: 10,
+	})
+	require.NoError(t, err)
+	require.NotEmpty(t, result)
+
+	require.Equal(t, result.Account.ID, result.Entry.AccountID)
+}
