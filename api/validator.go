@@ -13,3 +13,5 @@ var validCurrency validator.Func = func(fieldLevel validator.FieldLevel) bool {
 
 	return false
 }
+
+// migrate create -ext sql -dir db/migration -seq add_users
