@@ -33,4 +33,23 @@ server:
 mock:
 	mockgen -package mockdb -destination db/mock/store.go github.com/billiraheem/Billi-Bank/db/sqlc Store
 
-.PHONY: postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 sqlc test server mockdb
+myapp-image:
+	docker build -t billibank:latest .
+
+run-myimage:
+	docker run --name billibank -p 8080:8080 billibank:latest
+
+run-myimage2:
+	docker run --name billibank -p 8080:8080 -e GIN_MODE=release billibank:latest
+
+my-network:
+	docker network create bank-network
+
+connect-network:
+	docker network connect bank-network postgres12
+
+# this ensures that the billbank and postgres 12 are on the same network
+run-myimage3:
+	docker run --name billibank --network bank-network -p 8080:8080 -e GIN_MODE=release -e DB_SOURCE=$(DB_SOURCE_IMAGE) billibank:latest
+
+.PHONY: postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 sqlc test server mockdb myapp-image run-myimage run-myimage2 run-myimage3 my-network connect-network
