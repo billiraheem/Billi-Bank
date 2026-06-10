@@ -2,15 +2,16 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 
 	db "github.com/billiraheem/Billi-Bank/db/sqlc"
+	"github.com/billiraheem/Billi-Bank/token"
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
 )
 
 type createAccountRequest struct {
-	Owner    string `json:"owner" binding:"required"`
 	Currency string `json:"currency" binding:"required,currency"`
 }
 
@@ -22,8 +23,10 @@ func (server *Server) createAccount(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationPayload).(*token.Payload)
+
 	args := db.CreateAccountParams{
-		Owner:    req.Owner,
+		Owner:    authPayload.Username,
 		Currency: req.Currency,
 		Balance:  0,
 	}
@@ -67,6 +70,14 @@ func (server *Server) getAccount(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationPayload).(*token.Payload)
+
+	if account.Owner != authPayload.Username {
+		err := errors.New("account does not belong to the user")
+		ctx.JSON(http.StatusUnauthorized, errRes(err))
+		return
+	}
+
 	ctx.JSON(http.StatusOK, account)
 }
 
@@ -83,7 +94,10 @@ func (server *Server) listAccount(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationPayload).(*token.Payload)
+
 	args := db.ListAccountsParams{
+		Owner: authPayload.Username,
 		Limit:  req.PageSize,
 		Offset: (req.PageID - 1) * req.PageSize,
 	}
@@ -115,12 +129,7 @@ func (server *Server) updateAccount(ctx *gin.Context) {
 		return
 	}
 
-	arg := db.DepositTxParams{
-		AccountID: uriReq.ID,
-		Amount:    bodyReq.Amount,
-	}
-
-	account, err := server.store.DepositTx(ctx, arg)
+	account, err := server.store.GetAccount(ctx, uriReq.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errRes(err))
@@ -131,7 +140,31 @@ func (server *Server) updateAccount(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, account)
+	authPayload := ctx.MustGet(authorizationPayload).(*token.Payload)
+
+	if account.Owner != authPayload.Username {
+		err := errors.New("account does not belong to the user")
+		ctx.JSON(http.StatusUnauthorized, errRes(err))
+		return
+	}
+
+	arg := db.DepositTxParams{
+		AccountID: uriReq.ID,
+		Amount:    bodyReq.Amount,
+	}
+
+	result, err := server.store.DepositTx(ctx, arg)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errRes(err))
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, errRes(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, result)
 }
 
 func (server *Server) deleteAccount(ctx *gin.Context) {
@@ -142,7 +175,26 @@ func (server *Server) deleteAccount(ctx *gin.Context) {
 		return
 	}
 
-	err := server.store.DeleteAccount(ctx, req.ID)
+	account, err := server.store.GetAccount(ctx, req.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errRes(err))
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, errRes(err))
+		return
+	}
+
+	authPayload := ctx.MustGet(authorizationPayload).(*token.Payload)
+
+	if account.Owner != authPayload.Username {
+		err := errors.New("account does not belong to the user")
+		ctx.JSON(http.StatusUnauthorized, errRes(err))
+		return
+	}
+
+	err = server.store.DeleteAccount(ctx, req.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errRes(err))
