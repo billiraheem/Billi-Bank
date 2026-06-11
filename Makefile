@@ -52,4 +52,7 @@ connect-network:
 run-myimage3:
 	docker run --name billibank --network bank-network -p 8080:8080 -e GIN_MODE=release -e DB_SOURCE=$(DB_SOURCE_IMAGE) billibank:latest
 
-.PHONY: postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 sqlc test server mockdb myapp-image run-myimage run-myimage2 run-myimage3 my-network connect-network
+executable-start:
+	chmod +x start.sh
+
+.PHONY: postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 sqlc test server mockdb myapp-image run-myimage run-myimage2 run-myimage3 my-network connect-network executable-start
