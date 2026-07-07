@@ -55,4 +55,7 @@ run-myimage3:
 executable-start:
 	chmod +x start.sh
 
-.PHONY: postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 sqlc test server mockdb myapp-image run-myimage run-myimage2 run-myimage3 my-network connect-network executable-start
+migrateup-aws:
+	migrate -path db/migration -database "$(DB_SOURCE_AWS)" -verbose up
+
+.PHONY: postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 sqlc test server mockdb myapp-image run-myimage run-myimage2 run-myimage3 my-network connect-network executable-start migrateup-aws
