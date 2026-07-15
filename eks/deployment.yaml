@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: billi-bank-api-deployment
+  labels:
+    app: billi-bank-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: billi-bank-api
+  template:
+    metadata:
+      labels:
+        app: billi-bank-api
+    spec:
+      containers:
+      - name: billi-bank-api
+        image: 575036456868.dkr.ecr.eu-north-1.amazonaws.com/billibank:latest
+        ports:
+        - containerPort: 8080
+# the image tag was changed to latest because we always want to deploy that but when testing we can use a specific tag
