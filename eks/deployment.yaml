@@ -17,6 +17,7 @@ spec:
       containers:
       - name: billi-bank-api
         image: 575036456868.dkr.ecr.eu-north-1.amazonaws.com/billibank:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
 # the image tag was changed to latest because we always want to deploy that but when testing we can use a specific tag
