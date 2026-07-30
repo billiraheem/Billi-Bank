@@ -486,7 +486,7 @@ func TestCreateDepositAPI(t *testing.T) {
 			require.NoError(t, err)
 
 			url := "/deposit"
-			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+			request, err := http.NewRequest(http.MethodPatch, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
 			tc.setupAuth(t, request, server.tokenMaker)
