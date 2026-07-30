@@ -47,6 +47,7 @@ func (server *Server) setupRouter() {
 	// endpoints
 	router.POST("/users", server.createUser)
 	router.POST("/users/login", server.loginUser)
+	router.POST("/tokens/renew_access", server.renewAccessToken)
 
 	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 
@@ -56,7 +57,8 @@ func (server *Server) setupRouter() {
 	authRoutes.PATCH("/accounts/:id", server.updateAccount)
 	authRoutes.DELETE("/accounts/:id", server.deleteAccount)
 
-	authRoutes.POST("/transfers", server.createTransfer)
+	authRoutes.PATCH("/transfers", server.createTransfer)
+	authRoutes.PATCH("/deposit", server.createDeposit)
 
 	server.router = router
 }

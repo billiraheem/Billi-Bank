@@ -58,6 +58,45 @@ func (server *Server) createTransfer(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, result)
 }
 
+type depositRequest struct {
+	AccountID int64 `json:"account_id" binding:"required,min=1"`
+	Amount    int64 `json:"amount" binding:"required,gt=0"`
+	Currency string `json:"currency" binding:"required,currency"`
+}
+
+func (server *Server) createDeposit(ctx *gin.Context) {
+	var req depositRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errRes(err))
+		return
+	}
+
+	account, valid := server.validAccount(ctx, req.AccountID, req.Currency)
+	if !valid {
+		return
+	}
+
+	authPayload := ctx.MustGet(authorizationPayload).(*token.Payload)
+	if account.Owner != authPayload.Username {
+		err := errors.New("account does not belong to user")
+		ctx.JSON(http.StatusUnauthorized, errRes(err))
+		return
+	}
+
+	args := db.DepositTxParams{
+		AccountID: req.AccountID,
+		Amount: req.Amount,
+	}
+
+	result, err := server.store.DepositTx(ctx, args)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errRes(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, result)
+}
+
 func (server *Server) validAccount(ctx *gin.Context, accountID int64, currency string) (db.Account, bool) {
 	account, err := server.store.GetAccount(ctx, accountID)
 	if err != nil {
