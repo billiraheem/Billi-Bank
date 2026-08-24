@@ -84,7 +84,25 @@ proto_gateway:
 	--grpc-gateway_out=pb --grpc-gateway_opt=paths=source_relative \
     proto/*.proto
 
+proto_swagger:
+	rm -f pb/*.go
+	protoc --proto_path=proto --go_out=pb --go_opt=paths=source_relative \
+    --go-grpc_out=pb --go-grpc_opt=paths=source_relative \
+	--grpc-gateway_out=pb --grpc-gateway_opt=paths=source_relative \
+	--openapiv2_out=docs/swagger \
+    proto/*.proto
+
+# this allows us to have all on json in one file
+proto_swagger_2:
+	rm -f pb/*.go
+	rm -f docs/swagger/*.swagger.json
+	protoc --proto_path=proto --go_out=pb --go_opt=paths=source_relative \
+    --go-grpc_out=pb --go-grpc_opt=paths=source_relative \
+	--grpc-gateway_out=pb --grpc-gateway_opt=paths=source_relative \
+	--openapiv2_out=docs/swagger --openapiv2_opt=allow_merge=true,merge_file_name=billi_bank \
+    proto/*.proto
+
 evans:
 	evans --host localhost --port 9090 -r repl --package pb --service BilliBank
 
-.PHONY: postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 sqlc test server mockdb myapp-image run-myimage run-myimage2 run-myimage3 my-network connect-network executable-start migrateup-aws db_docs db_schema proto proto_2 evans proto_gateway
+.PHONY: postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 sqlc test server mockdb myapp-image run-myimage run-myimage2 run-myimage3 my-network connect-network executable-start migrateup-aws db_docs db_schema proto proto_2 evans proto_gateway proto_swagger proto_swagger_2
