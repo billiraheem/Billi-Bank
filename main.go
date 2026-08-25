@@ -17,6 +17,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/encoding/protojson"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 )
 
 func main() {
@@ -32,9 +35,12 @@ func main() {
 
 	store := db.NewStore(conn)
 
-	runGinServer(config, store)
-	// go runGatewayServer(config, store) // runs in a seperate gorountine so the 2 servers don't block each other
-	// runGrpcServer(config, store)
+	// run db migrations directly in the code this is for our docker image
+	runDBMigrations(config.MigrationURL, config.DBSource)
+
+	// runGinServer(config, store)
+	go runGatewayServer(config, store) // runs in a seperate gorountine so the 2 servers don't block each other
+	runGrpcServer(config, store)
 }
 
 func runGinServer(config utils.Config, store db.Store) {
@@ -110,4 +116,17 @@ func runGatewayServer(config utils.Config, store db.Store) {
 	if err != nil{
 		log.Fatal("cannot start HTTP gateway server:", err)
 	}
+}
+
+func runDBMigrations(migrationURL string, dbSource string) {
+	migration, err := migrate.New(migrationURL, dbSource)
+	if err != nil {
+		log.Fatal("cannot create a migration instance:", err)
+	}
+
+	if err = migration.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatal("failed to run migrate up: ", err)
+	}
+
+	log.Println("db migration successful")
 }
