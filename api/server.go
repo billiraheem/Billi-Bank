@@ -57,6 +57,8 @@ func (server *Server) setupRouter() {
 	authRoutes.PATCH("/accounts/:id", server.updateAccount)
 	authRoutes.DELETE("/accounts/:id", server.deleteAccount)
 
+	authRoutes.PATCH("/users/me", server.updateUser)
+
 	authRoutes.POST("/transfers", server.createTransfer)
 	authRoutes.PATCH("/deposit", server.createDeposit)
 

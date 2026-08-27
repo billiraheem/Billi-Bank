@@ -48,3 +48,10 @@ func RandomCurrency() string {
 	n := len(currencies)
 	return currencies[rand.Intn(n)]
 }
+
+func DerefString(s *string) string {
+    if s != nil {
+        return *s
+    }
+    return ""
+}

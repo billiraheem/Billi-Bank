@@ -6,6 +6,7 @@ import (
 	"time"
 
 	db "github.com/billiraheem/Billi-Bank/db/sqlc"
+	"github.com/billiraheem/Billi-Bank/token"
 	"github.com/billiraheem/Billi-Bank/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -144,6 +145,60 @@ func (server *Server) loginUser(ctx *gin.Context) {
 		RefreshTokenExpiresAt: refreshPayload.ExpiredAt,
 		User:                  newUserResponse(user),
 	}
+
+	ctx.JSON(http.StatusOK, res)
+}
+
+type updateUserRequest struct {
+	Password *string `json:"password" binding:"omitempty,min=6"`
+	Fullname *string `json:"fullname" binding:"omitempty"`
+	Email    *string `json:"email" binding:"omitempty,email"`
+}
+
+func (server *Server) updateUser(ctx *gin.Context) {
+	var req updateUserRequest
+	var hashedPassword *string
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errRes(err))
+		return
+	}
+
+	authPayload := ctx.MustGet(authorizationPayload).(*token.Payload)
+
+	if req.Password != nil {
+		password, err := utils.HashPassword(*req.Password)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errRes(err))
+			return
+		}
+
+		hashedPassword = &password
+	}
+
+	args := db.UpdateUserParams{
+		Username: authPayload.Username,
+		HashedPassword: sql.NullString{
+            String: utils.DerefString(hashedPassword),
+            Valid:  req.Password != nil,
+        },
+        Fullname: sql.NullString{
+            String: utils.DerefString(req.Fullname),
+            Valid:  req.Fullname != nil,
+        },
+        Email: sql.NullString{
+            String: utils.DerefString(req.Email),
+            Valid:  req.Email != nil,
+        },
+	}
+
+	updatedUser, err := server.store.UpdateUser(ctx, args)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errRes(err))
+		return
+	}
+
+	res := newUserResponse(updatedUser)
 
 	ctx.JSON(http.StatusOK, res)
 }
