@@ -7,10 +7,9 @@ import "user.proto";
 option go_package = "github.com/billiraheem/Billi-Bank/pb";
 
 message UpdateUserRequest {
-  string username = 1;
-  optional string fullname = 2;
-  optional string email = 3;
-  optional string password = 4;
+  optional string fullname = 1;
+  optional string email = 2;
+  optional string password = 3;
 }
 
 message UpdateUserResponse {

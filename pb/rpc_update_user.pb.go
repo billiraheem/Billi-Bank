@@ -23,10 +23,9 @@ const (
 
 type UpdateUserRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
-	Fullname      *string                `protobuf:"bytes,2,opt,name=fullname,proto3,oneof" json:"fullname,omitempty"`
-	Email         *string                `protobuf:"bytes,3,opt,name=email,proto3,oneof" json:"email,omitempty"`
-	Password      *string                `protobuf:"bytes,4,opt,name=password,proto3,oneof" json:"password,omitempty"`
+	Fullname      *string                `protobuf:"bytes,1,opt,name=fullname,proto3,oneof" json:"fullname,omitempty"`
+	Email         *string                `protobuf:"bytes,2,opt,name=email,proto3,oneof" json:"email,omitempty"`
+	Password      *string                `protobuf:"bytes,3,opt,name=password,proto3,oneof" json:"password,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -59,13 +58,6 @@ func (x *UpdateUserRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use UpdateUserRequest.ProtoReflect.Descriptor instead.
 func (*UpdateUserRequest) Descriptor() ([]byte, []int) {
 	return file_rpc_update_user_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *UpdateUserRequest) GetUsername() string {
-	if x != nil {
-		return x.Username
-	}
-	return ""
 }
 
 func (x *UpdateUserRequest) GetFullname() string {
@@ -138,12 +130,11 @@ var File_rpc_update_user_proto protoreflect.FileDescriptor
 const file_rpc_update_user_proto_rawDesc = "" +
 	"\n" +
 	"\x15rpc_update_user.proto\x12\x02pb\x1a\n" +
-	"user.proto\"\xb0\x01\n" +
-	"\x11UpdateUserRequest\x12\x1a\n" +
-	"\busername\x18\x01 \x01(\tR\busername\x12\x1f\n" +
-	"\bfullname\x18\x02 \x01(\tH\x00R\bfullname\x88\x01\x01\x12\x19\n" +
-	"\x05email\x18\x03 \x01(\tH\x01R\x05email\x88\x01\x01\x12\x1f\n" +
-	"\bpassword\x18\x04 \x01(\tH\x02R\bpassword\x88\x01\x01B\v\n" +
+	"user.proto\"\x94\x01\n" +
+	"\x11UpdateUserRequest\x12\x1f\n" +
+	"\bfullname\x18\x01 \x01(\tH\x00R\bfullname\x88\x01\x01\x12\x19\n" +
+	"\x05email\x18\x02 \x01(\tH\x01R\x05email\x88\x01\x01\x12\x1f\n" +
+	"\bpassword\x18\x03 \x01(\tH\x02R\bpassword\x88\x01\x01B\v\n" +
 	"\t_fullnameB\b\n" +
 	"\x06_emailB\v\n" +
 	"\t_password\"2\n" +
