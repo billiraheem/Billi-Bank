@@ -190,7 +190,7 @@ func (server *Server) updateUser(ctx *gin.Context) {
 		}
 
 		args.PasswordChangedAt = sql.NullTime{
-			Time: time.Now(),
+			Time:  time.Now(),
 			Valid: true,
 		}
 	}
@@ -199,6 +199,7 @@ func (server *Server) updateUser(ctx *gin.Context) {
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errRes(err))
+			return
 		}
 
 		ctx.JSON(http.StatusInternalServerError, errRes(err))

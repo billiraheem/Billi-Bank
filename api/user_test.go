@@ -336,6 +336,8 @@ func (e eqUpdateUserParamsMatcher) Matches(x interface{}) bool {
 	}
 
 	e.arg.HashedPassword = arg.HashedPassword
+	e.arg.PasswordChangedAt = arg.PasswordChangedAt
+	
 	return reflect.DeepEqual(e.arg, arg)
 }
 
