@@ -157,7 +157,6 @@ type updateUserRequest struct {
 
 func (server *Server) updateUser(ctx *gin.Context) {
 	var req updateUserRequest
-	var hashedPassword *string
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errRes(err))
@@ -166,34 +165,42 @@ func (server *Server) updateUser(ctx *gin.Context) {
 
 	authPayload := ctx.MustGet(authorizationPayload).(*token.Payload)
 
+	args := db.UpdateUserParams{
+		Username: authPayload.Username,
+		Fullname: sql.NullString{
+			String: utils.DerefString(req.Fullname),
+			Valid:  req.Fullname != nil,
+		},
+		Email: sql.NullString{
+			String: utils.DerefString(req.Email),
+			Valid:  req.Email != nil,
+		},
+	}
+
 	if req.Password != nil {
-		password, err := utils.HashPassword(*req.Password)
+		hasedPasswword, err := utils.HashPassword(*req.Password)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, errRes(err))
 			return
 		}
 
-		hashedPassword = &password
-	}
+		args.HashedPassword = sql.NullString{
+			String: hasedPasswword,
+			Valid:  req.Password != nil,
+		}
 
-	args := db.UpdateUserParams{
-		Username: authPayload.Username,
-		HashedPassword: sql.NullString{
-            String: utils.DerefString(hashedPassword),
-            Valid:  req.Password != nil,
-        },
-        Fullname: sql.NullString{
-            String: utils.DerefString(req.Fullname),
-            Valid:  req.Fullname != nil,
-        },
-        Email: sql.NullString{
-            String: utils.DerefString(req.Email),
-            Valid:  req.Email != nil,
-        },
+		args.PasswordChangedAt = sql.NullTime{
+			Time: time.Now(),
+			Valid: true,
+		}
 	}
 
 	updatedUser, err := server.store.UpdateUser(ctx, args)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errRes(err))
+		}
+
 		ctx.JSON(http.StatusInternalServerError, errRes(err))
 		return
 	}
