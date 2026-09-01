@@ -18,6 +18,7 @@ import (
 	"github.com/billiraheem/Billi-Bank/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 )
@@ -62,16 +63,16 @@ func TestCreateUserAPI(t *testing.T) {
 		{
 			name: "OK",
 			body: gin.H{
-				"username":  user.Username,
-				"password":  password,
+				"username": user.Username,
+				"password": password,
 				"fullname": user.Fullname,
-				"email":     user.Email,
+				"email":    user.Email,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				args := db.CreateUserParams{
 					Username: user.Username,
 					Fullname: user.Fullname,
-					Email: user.Email,
+					Email:    user.Email,
 				}
 				store.EXPECT().
 					CreateUser(gomock.Any(), EqCreateUserParams(args, password)).
@@ -86,10 +87,10 @@ func TestCreateUserAPI(t *testing.T) {
 		{
 			name: "InternalError",
 			body: gin.H{
-				"username":  user.Username,
-				"password":  password,
+				"username": user.Username,
+				"password": password,
 				"fullname": user.Fullname,
-				"email":     user.Email,
+				"email":    user.Email,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -104,10 +105,10 @@ func TestCreateUserAPI(t *testing.T) {
 		{
 			name: "DuplicateUsername",
 			body: gin.H{
-				"username":  user.Username,
-				"password":  password,
+				"username": user.Username,
+				"password": password,
 				"fullname": user.Fullname,
-				"email":     user.Email,
+				"email":    user.Email,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -122,10 +123,10 @@ func TestCreateUserAPI(t *testing.T) {
 		{
 			name: "InvalidUsername",
 			body: gin.H{
-				"username":  "invalid-user#1",
-				"password":  password,
+				"username": "invalid-user#1",
+				"password": password,
 				"fullname": user.Fullname,
-				"email":     user.Email,
+				"email":    user.Email,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -139,10 +140,10 @@ func TestCreateUserAPI(t *testing.T) {
 		{
 			name: "InvalidEmail",
 			body: gin.H{
-				"username":  user.Username,
-				"password":  password,
+				"username": user.Username,
+				"password": password,
 				"fullname": user.Fullname,
-				"email":     "invalid-email",
+				"email":    "invalid-email",
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -156,10 +157,10 @@ func TestCreateUserAPI(t *testing.T) {
 		{
 			name: "TooShortPassword",
 			body: gin.H{
-				"username":  user.Username,
-				"password":  "123",
+				"username": user.Username,
+				"password": "123",
 				"fullname": user.Fullname,
-				"email":     user.Email,
+				"email":    user.Email,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -337,7 +338,7 @@ func (e eqUpdateUserParamsMatcher) Matches(x interface{}) bool {
 
 	e.arg.HashedPassword = arg.HashedPassword
 	e.arg.PasswordChangedAt = arg.PasswordChangedAt
-	
+
 	return reflect.DeepEqual(e.arg, arg)
 }
 
@@ -353,7 +354,7 @@ func EqUpdateUserParams(arg db.UpdateUserParams, password string) gomock.Matcher
 func TestUpdateUserAPI(t *testing.T) {
 	user, password := randomUser(t)
 
-	testCases := []struct{
+	testCases := []struct {
 		name          string
 		body          gin.H
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
@@ -426,7 +427,7 @@ func TestUpdateUserAPI(t *testing.T) {
 		{
 			name: "Update only email",
 			body: gin.H{
-				"email":    user.Email,
+				"email": user.Email,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
@@ -463,7 +464,7 @@ func TestUpdateUserAPI(t *testing.T) {
 					Username: user.Username,
 					HashedPassword: sql.NullString{
 						String: password,
-						Valid: true,
+						Valid:  true,
 					},
 				}
 
@@ -480,9 +481,9 @@ func TestUpdateUserAPI(t *testing.T) {
 		{
 			name: "InternalError",
 			body: gin.H{
-				"password":  password,
+				"password": password,
 				"fullname": user.Fullname,
-				"email":     user.Email,
+				"email":    user.Email,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
@@ -500,9 +501,9 @@ func TestUpdateUserAPI(t *testing.T) {
 		{
 			name: "InvalidEmail",
 			body: gin.H{
-				"password":  password,
+				"password": password,
 				"fullname": user.Fullname,
-				"email":     "invalid-email",
+				"email":    "invalid-email",
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
@@ -519,9 +520,9 @@ func TestUpdateUserAPI(t *testing.T) {
 		{
 			name: "TooShortPassword",
 			body: gin.H{
-				"password":  "123",
+				"password": "123",
 				"fullname": user.Fullname,
-				"email":     user.Email,
+				"email":    user.Email,
 			},
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
@@ -535,7 +536,6 @@ func TestUpdateUserAPI(t *testing.T) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
 			},
 		},
-
 	}
 
 	for i := range testCases {
@@ -568,6 +568,79 @@ func TestUpdateUserAPI(t *testing.T) {
 
 }
 
+func TestLogoutUserAPI(t *testing.T) {
+	user, _ := randomUser(t)
+	tokenMaker, err := token.NewPasetoMaker("12345678901234567890123456789012")
+	require.NoError(t, err)
+
+	refreshToken, refreshPayload, err := tokenMaker.CreateToken(
+		user.Username,
+		5*time.Minute,
+	)
+	require.NoError(t, err)
+
+	session := randomSession(user.Username, refreshToken, refreshPayload.ID)
+
+	testCases := []struct {
+		name          string
+		body          gin.H
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(recoder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			body: gin.H{
+				"refresh_token": refreshToken,
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					GetSession(gomock.Any(), session.ID).
+					Times(1).
+					Return(session, nil)
+				store.EXPECT().
+					BlockSession(gomock.Any(), session.ID).
+					Times(1).
+					Return(session, nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			store := mockdb.NewMockStore(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store)
+			recorder := httptest.NewRecorder()
+
+			// Marshal body data to JSON
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
+			url := "/users/logout"
+			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+			require.NoError(t, err)
+
+			tc.setupAuth(t, request, server.tokenMaker)
+
+			server.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+
 func randomUser(t *testing.T) (user db.User, password string) {
 	password = utils.RandomString(6)
 	hashedPassword, err := utils.HashPassword(password)
@@ -580,6 +653,18 @@ func randomUser(t *testing.T) (user db.User, password string) {
 		Email:          utils.RandomEmail(),
 	}
 	return
+}
+
+func randomSession(username string, refreshToken string, refreshPayloadID uuid.UUID) (session db.Session) {
+	return db.Session{
+		ID:           refreshPayloadID,
+		Username:     username,
+		RefreshToken: refreshToken,
+		UserAgent:    "djjduis",
+		ClientIp:     "ncjksadksaj",
+		IsBlocked:    false,
+		ExpiresAt:    time.Now().Add(5 * time.Minute),
+	}
 }
 
 func requireBodyMatchUser(t *testing.T, body *bytes.Buffer, user db.User) {

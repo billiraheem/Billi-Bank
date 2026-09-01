@@ -2,6 +2,8 @@ package api
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -209,4 +211,57 @@ func (server *Server) updateUser(ctx *gin.Context) {
 	res := newUserResponse(updatedUser)
 
 	ctx.JSON(http.StatusOK, res)
+}
+
+type logoutUserRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+
+func (server *Server) logoutUser(ctx *gin.Context) {
+	var req logoutUserRequest
+
+    if err := ctx.ShouldBindJSON(&req); err != nil {
+        ctx.JSON(http.StatusBadRequest, errRes(err))
+        return
+    }
+
+    // verify the refresh token is valid
+    refreshPayload, err := server.tokenMaker.VerifyToken(req.RefreshToken)
+    if err != nil {
+		fmt.Println("VERIFY REFRESH TOKEN ERROR:", err)
+
+        ctx.JSON(http.StatusUnauthorized, errRes(err))
+        return
+	}
+
+	// get the session
+    session, err := server.store.GetSession(ctx, refreshPayload.ID)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            ctx.JSON(http.StatusNotFound, errRes(err))
+            return
+        }
+        ctx.JSON(http.StatusInternalServerError, errRes(err))
+        return
+    }
+
+	// make sure session belongs to the right user
+    authPayload := ctx.MustGet(authorizationPayload).(*token.Payload)
+	fmt.Println("SESSION USERNAME:", session.Username)
+	fmt.Println("AUTH USERNAME:", authPayload.Username)
+    if session.Username != authPayload.Username {
+		fmt.Println("SESSION USERNAME DOES NOT MATCH AUTH USERNAME")
+        err := errors.New("session does not belong to the authenticated user")
+        ctx.JSON(http.StatusUnauthorized, errRes(err))
+        return
+    }
+
+	// block the session
+    _, err = server.store.BlockSession(ctx, session.ID)
+    if err != nil {
+        ctx.JSON(http.StatusInternalServerError, errRes(err))
+        return
+    }
+
+    ctx.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
 }
