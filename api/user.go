@@ -74,6 +74,8 @@ func (server *Server) createUser(ctx *gin.Context) {
 		return
 	}
 
+	// send verify email to user
+
 	res := newUserResponse(user)
 
 	ctx.JSON(http.StatusOK, res)
