@@ -108,4 +108,8 @@ evans:
 redis:
 	docker run --name redis -p 6379:6379 -d redis:8-alpine
 
-.PHONY: postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 sqlc test server mockdb myapp-image run-myimage run-myimage2 run-myimage3 my-network connect-network executable-start migrateup-aws db_docs db_schema proto proto_2 evans proto_gateway proto_swagger proto_swagger_2 redis
+# for my create user api test
+mock_redis:
+	mockgen -package mockwk -destination worker/mock/distributor.go github.com/billiraheem/Billi-Bank/worker TaskDistributor
+
+.PHONY: postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 sqlc test server mockdb myapp-image run-myimage run-myimage2 run-myimage3 my-network connect-network executable-start migrateup-aws db_docs db_schema proto proto_2 evans proto_gateway proto_swagger proto_swagger_2 redis mock_redis
