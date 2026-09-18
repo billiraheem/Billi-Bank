@@ -279,7 +279,7 @@ func TestCreateTransferApi(t *testing.T) {
 			tc.buildStubs(store)
 
 			// start test server and send request
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, nil)
 			recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -478,7 +478,7 @@ func TestCreateDepositAPI(t *testing.T) {
 			tc.buildStubs(store)
 
 			// start test server and send request
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, nil)
 			recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON

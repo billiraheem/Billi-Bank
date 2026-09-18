@@ -183,7 +183,8 @@ func TestCreateUserAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store)
+			// TODO: test out my send verify email task
+			server := newTestServer(t, store, nil)
 			recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -303,7 +304,7 @@ func TestLoginUserAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, nil)
 			recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -548,7 +549,7 @@ func TestUpdateUserAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, nil)
 			recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -622,7 +623,7 @@ func TestLogoutUserAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, nil)
 			recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
