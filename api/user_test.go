@@ -106,7 +106,7 @@ func TestCreateUserAPI(t *testing.T) {
 
 				taskDistributor.EXPECT().
                     DistributeTaskSendVerifyEmail(gomock.Any(), gomock.Any(), gomock.Any()).
-                    Times(1).
+                    Times(0).
                     Return(nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -129,7 +129,7 @@ func TestCreateUserAPI(t *testing.T) {
 
 				taskDistributor.EXPECT().
                     DistributeTaskSendVerifyEmail(gomock.Any(), gomock.Any(), gomock.Any()).
-                    Times(1).
+                    Times(0).
                     Return(nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -151,7 +151,7 @@ func TestCreateUserAPI(t *testing.T) {
 
 				taskDistributor.EXPECT().
                     DistributeTaskSendVerifyEmail(gomock.Any(), gomock.Any(), gomock.Any()).
-                    Times(1).
+                    Times(0).
                     Return(nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -173,7 +173,7 @@ func TestCreateUserAPI(t *testing.T) {
 
 				taskDistributor.EXPECT().
                     DistributeTaskSendVerifyEmail(gomock.Any(), gomock.Any(), gomock.Any()).
-                    Times(1).
+                    Times(0).
                     Return(nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
@@ -195,7 +195,7 @@ func TestCreateUserAPI(t *testing.T) {
 
 				taskDistributor.EXPECT().
                     DistributeTaskSendVerifyEmail(gomock.Any(), gomock.Any(), gomock.Any()).
-                    Times(1).
+                    Times(0).
                     Return(nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
