@@ -105,4 +105,7 @@ proto_swagger_2:
 evans:
 	evans --host localhost --port 9090 -r repl --package pb --service BilliBank
 
-.PHONY: postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 sqlc test server mockdb myapp-image run-myimage run-myimage2 run-myimage3 my-network connect-network executable-start migrateup-aws db_docs db_schema proto proto_2 evans proto_gateway proto_swagger proto_swagger_2
+redis:
+	docker run --name redis -p 6379:6379 -d redis:8-alpine
+
+.PHONY: postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 sqlc test server mockdb myapp-image run-myimage run-myimage2 run-myimage3 my-network connect-network executable-start migrateup-aws db_docs db_schema proto proto_2 evans proto_gateway proto_swagger proto_swagger_2 redis

@@ -7,6 +7,7 @@ import (
 	"github.com/billiraheem/Billi-Bank/pb"
 	"github.com/billiraheem/Billi-Bank/token"
 	"github.com/billiraheem/Billi-Bank/utils"
+	"github.com/billiraheem/Billi-Bank/worker"
 )
 
 // Server serves gRPC requests for the banking service.
@@ -15,10 +16,11 @@ type Server struct {
 	config utils.Config
 	store  db.Store
 	tokenMaker token.Maker
+	taskDistributor worker.TaskDistributor
 }
 
 // NewServer creates a new gRPC server and setup routing
-func NewServer(config utils.Config, store db.Store) (*Server, error) {
+func NewServer(config utils.Config, store db.Store, taskDistributor worker.TaskDistributor) (*Server, error) {
 	// to use JWT: swap NewPasetoMaker with NewJWTMaker
 	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
 	if err != nil {
@@ -29,6 +31,7 @@ func NewServer(config utils.Config, store db.Store) (*Server, error) {
 		config: config,
 		store: store,
 		tokenMaker: tokenMaker,
+		taskDistributor: taskDistributor,
 	}
 
 	return server, nil

@@ -6,6 +6,7 @@ import (
 	db "github.com/billiraheem/Billi-Bank/db/sqlc"
 	"github.com/billiraheem/Billi-Bank/token"
 	"github.com/billiraheem/Billi-Bank/utils"
+	"github.com/billiraheem/Billi-Bank/worker"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -17,10 +18,11 @@ type Server struct {
 	store  db.Store
 	tokenMaker token.Maker
 	router *gin.Engine
+	taskDistributor worker.TaskDistributor
 }
 
 // NewServer creates a new HTTP server and setup routing
-func NewServer(config utils.Config, store db.Store) (*Server, error) {
+func NewServer(config utils.Config, store db.Store, taskDistributor worker.TaskDistributor) (*Server, error) {
 	// to use JWT: swap NewPasetoMaker with NewJWTMaker
 	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetricKey)
 	if err != nil {
@@ -31,6 +33,7 @@ func NewServer(config utils.Config, store db.Store) (*Server, error) {
 		config: config,
 		store: store,
 		tokenMaker: tokenMaker,
+		taskDistributor: taskDistributor,
 	}
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {

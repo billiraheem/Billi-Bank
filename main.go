@@ -12,10 +12,12 @@ import (
 	"github.com/billiraheem/Billi-Bank/gapi"
 	"github.com/billiraheem/Billi-Bank/pb"
 	"github.com/billiraheem/Billi-Bank/utils"
+	"github.com/billiraheem/Billi-Bank/worker"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/hibiken/asynq"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -44,13 +46,20 @@ func main() {
 	// run db migrations directly in the code this is for our docker image
 	runDBMigrations(config.MigrationURL, config.DBSource)
 
-	// runGinServer(config, store)
-	go runGatewayServer(config, store) // runs in a seperate gorountine so the 2 servers don't block each other
-	runGrpcServer(config, store)
+	redisOpt := asynq.RedisClientOpt{
+		Addr: config.RedisAddress,
+	}
+
+	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
+
+	go runTaskProcessor(redisOpt, store)
+	// runGinServer(config, store, taskDistributor)
+	go runGatewayServer(config, store, taskDistributor) // runs in a seperate gorountine so the 2 servers don't block each other
+	runGrpcServer(config, store, taskDistributor)
 }
 
-func runGinServer(config utils.Config, store db.Store) {
-	server, err := api.NewServer(config, store)
+func runGinServer(config utils.Config, store db.Store, taskDistributor worker.TaskDistributor) {
+	server, err := api.NewServer(config, store, taskDistributor)
 	if err != nil {
 		log.Fatal().Msg("cannot create server:")
 	}
@@ -61,8 +70,8 @@ func runGinServer(config utils.Config, store db.Store) {
 	}
 }
 
-func runGrpcServer(config utils.Config, store db.Store) {
-	server, err := gapi.NewServer(config, store)
+func runGrpcServer(config utils.Config, store db.Store, taskDistributor worker.TaskDistributor) {
+	server, err := gapi.NewServer(config, store, taskDistributor)
 	if err != nil {
 		log.Fatal().Msg("cannot create server:")
 	}
@@ -85,8 +94,8 @@ func runGrpcServer(config utils.Config, store db.Store) {
 }
 
 // serves both http and grpc requests at the same time
-func runGatewayServer(config utils.Config, store db.Store) {
-	server, err := gapi.NewServer(config, store)
+func runGatewayServer(config utils.Config, store db.Store, taskDistributor worker.TaskDistributor) {
+	server, err := gapi.NewServer(config, store, taskDistributor)
 	if err != nil {
 		log.Fatal().Msg("cannot create server:")
 	}
@@ -137,4 +146,13 @@ func runDBMigrations(migrationURL string, dbSource string) {
 	}
 
 	log.Info().Msg("db migration successful")
+}
+
+func runTaskProcessor(redisOpt asynq.RedisClientOpt, store db.Store) {
+	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, store)
+	log.Info().Msg("start task processor")
+	err := taskProcessor.Start()
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to start task processor")
+	}
 }
