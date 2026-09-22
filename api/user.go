@@ -56,14 +56,28 @@ func (server *Server) createUser(ctx *gin.Context) {
 		return
 	}
 
-	args := db.CreateUserParams{
-		Username:       req.Username,
-		HashedPassword: hasedPasswword,
-		Fullname:       req.Fullname,
-		Email:          req.Email,
+	args := db.CreateUserTxParams{
+		CreateUserParams: db.CreateUserParams{
+			Username:       req.Username,
+			HashedPassword: hasedPasswword,
+			Fullname:       req.Fullname,
+			Email:          req.Email,
+		},
+		AfterCreate: func(user db.User) error {
+			// send verify email to user
+			taskPayload := &worker.PayloadSendVerifyEmail{
+				Username: user.Username,
+			}
+			opts := []asynq.Option{
+				asynq.MaxRetry(10),
+				asynq.ProcessIn(10 * time.Second),
+				asynq.Queue(worker.QueueCritical),
+			}
+			return server.taskDistributor.DistributeTaskSendVerifyEmail(ctx, taskPayload, opts...)
+		},
 	}
 
-	user, err := server.store.CreateUser(ctx, args)
+	txResult, err := server.store.CreateUserTx(ctx, args)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code.Name() {
@@ -76,23 +90,7 @@ func (server *Server) createUser(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: use db transaction 
-	// send verify email to user
-	taskPayload := &worker.PayloadSendVerifyEmail{
-		Username: user.Username,
-	}
-	opts := []asynq.Option{
-		asynq.MaxRetry(10),
-		asynq.ProcessIn(10 * time.Second),
-		asynq.Queue(worker.QueueCritical),
-	}
-	err = server.taskDistributor.DistributeTaskSendVerifyEmail(ctx, taskPayload, opts...)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errRes(err))
-		return
-	}
-
-	res := newUserResponse(user)
+	res := newUserResponse(txResult.User)
 
 	ctx.JSON(http.StatusOK, res)
 }
@@ -238,48 +236,48 @@ type logoutUserRequest struct {
 func (server *Server) logoutUser(ctx *gin.Context) {
 	var req logoutUserRequest
 
-    if err := ctx.ShouldBindJSON(&req); err != nil {
-        ctx.JSON(http.StatusBadRequest, errRes(err))
-        return
-    }
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errRes(err))
+		return
+	}
 
-    // verify the refresh token is valid
-    refreshPayload, err := server.tokenMaker.VerifyToken(req.RefreshToken)
-    if err != nil {
+	// verify the refresh token is valid
+	refreshPayload, err := server.tokenMaker.VerifyToken(req.RefreshToken)
+	if err != nil {
 		fmt.Println("VERIFY REFRESH TOKEN ERROR:", err)
 
-        ctx.JSON(http.StatusUnauthorized, errRes(err))
-        return
+		ctx.JSON(http.StatusUnauthorized, errRes(err))
+		return
 	}
 
 	// get the session
-    session, err := server.store.GetSession(ctx, refreshPayload.ID)
-    if err != nil {
-        if err == sql.ErrNoRows {
-            ctx.JSON(http.StatusNotFound, errRes(err))
-            return
-        }
-        ctx.JSON(http.StatusInternalServerError, errRes(err))
-        return
-    }
+	session, err := server.store.GetSession(ctx, refreshPayload.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errRes(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errRes(err))
+		return
+	}
 
 	// make sure session belongs to the right user
-    authPayload := ctx.MustGet(authorizationPayload).(*token.Payload)
+	authPayload := ctx.MustGet(authorizationPayload).(*token.Payload)
 	fmt.Println("SESSION USERNAME:", session.Username)
 	fmt.Println("AUTH USERNAME:", authPayload.Username)
-    if session.Username != authPayload.Username {
+	if session.Username != authPayload.Username {
 		fmt.Println("SESSION USERNAME DOES NOT MATCH AUTH USERNAME")
-        err := errors.New("session does not belong to the authenticated user")
-        ctx.JSON(http.StatusUnauthorized, errRes(err))
-        return
-    }
+		err := errors.New("session does not belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errRes(err))
+		return
+	}
 
 	// block the session
-    _, err = server.store.BlockSession(ctx, session.ID)
-    if err != nil {
-        ctx.JSON(http.StatusInternalServerError, errRes(err))
-        return
-    }
+	_, err = server.store.BlockSession(ctx, session.ID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errRes(err))
+		return
+	}
 
-    ctx.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
+	ctx.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
 }
