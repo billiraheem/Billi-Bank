@@ -18,7 +18,11 @@ type Config struct {
 	RefreshTokenDuration time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
 	MigrationURL         string        `mapstructure:"MIGRATION_URL"`
 	Environment          string        `mapstructure:"ENV"`
-	RedisAddress 		 string		   `mapstructure:"REDIS_ADDRESS"`
+	RedisAddress         string        `mapstructure:"REDIS_ADDRESS"`
+	EmailSenderName      string        `mapstructure:"EMAIL_SENDER_NAME"`
+	EmailSenderAddr      string        `mapstructure:"EMAIL_SENDER_ADDR"`
+	EmailSenderPassword  string        `mapstructure:"EMAIL_SENDER_PASSWORD"`
+	EmailReceiverAddr      string        `mapstructure:"EMAIL_RECEIVER_ADDR"`
 }
 
 // LoadConfig reads configuration from file or environment variables
