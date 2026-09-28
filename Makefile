@@ -9,6 +9,9 @@ createdb:
 dropdb:
 	docker exec -it postgres12 dropdb billi_bank
 
+new_migration:
+	migrate create -ext sql -dir db/migration -seq $(name)
+
 migrateup:
 	migrate -path db/migration -database "$(DB_SOURCE)" -verbose up
 
@@ -25,7 +28,7 @@ sqlc:
 	sqlc generate
 
 test:
-	go test -v -cover ./...
+	go test -v -cover -short ./...
 
 server:
 	go run main.go
@@ -112,4 +115,4 @@ redis:
 mock_redis:
 	mockgen -package mockwk -destination worker/mock/distributor.go github.com/billiraheem/Billi-Bank/worker TaskDistributor
 
-.PHONY: postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 sqlc test server mockdb myapp-image run-myimage run-myimage2 run-myimage3 my-network connect-network executable-start migrateup-aws db_docs db_schema proto proto_2 evans proto_gateway proto_swagger proto_swagger_2 redis mock_redis
+.PHONY: postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 sqlc test server mockdb myapp-image run-myimage run-myimage2 run-myimage3 my-network connect-network executable-start migrateup-aws db_docs db_schema proto proto_2 evans proto_gateway proto_swagger proto_swagger_2 redis mock_redis new_migration
