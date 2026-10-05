@@ -3,7 +3,6 @@ module github.com/billiraheem/Billi-Bank
 go 1.26.1
 
 require (
-	github.com/bsm/ginkgo/v2 v2.12.0
 	github.com/go-playground/validator/v10 v10.30.1
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/golang-migrate/migrate/v4 v4.19.1

@@ -281,3 +281,42 @@ func (server *Server) logoutUser(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
 }
+
+type verifyEmailRequest struct {
+	EmailID    int64  `form:"email_id" binding:"required"`
+	SecretCode string `form:"secret_code" binding:"required"`
+}
+
+type verifyEmailResponse struct {
+	IsVerified bool `json:"is_verified"`
+}
+
+func (server *Server) verifyEmail(ctx *gin.Context) {
+	var req verifyEmailRequest
+
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errRes(err))
+		return
+	}
+
+	args := db.VerifyEmailTxParams{
+		EmailID:    req.EmailID,
+		SecretCode: req.SecretCode,
+	}
+
+	txResult, err := server.store.VerifyEmailTx(ctx, args)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errRes(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errRes(err))
+		return
+	}
+
+	res := &verifyEmailResponse {
+		IsVerified: txResult.User.IsEmailVerified,
+	}
+
+	ctx.JSON(http.StatusOK, res)
+}

@@ -12,6 +12,7 @@ type Store interface {
 	TransferTx(ctx context.Context, args TransferTxParams) (TransferTxResult, error);
 	DepositTx(ctx context.Context, args DepositTxParams) (DepositTxResult, error);
 	CreateUserTx(ctx context.Context, args CreateUserTxParams) (CreateUserTxResult, error)
+	VerifyEmailTx(ctx context.Context, args VerifyEmailTxParams) (VerifyEmailTxResult, error)
 }
 
 // provides all functions to execute Db queries and transaction
